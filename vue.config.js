@@ -2,6 +2,9 @@ const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: true
 })
+defineConfig({
+  base: '/projeto15/'
+})
 module.exports = {
   css: {
     loaderOptions: {
@@ -10,4 +13,7 @@ module.exports = {
       }
     }
   }
+};
+module.exports = {
+  publicPath: process.env.NODE_ENV === "production" ? "/projeto15/" : "/",
 };
