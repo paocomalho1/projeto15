@@ -58,6 +58,7 @@ export default defineComponent({
 <style lang="scss">
     .corpo{
         &__notificacao{
+            z-index: 5;
             transition: 300ms ease-in-out;
             background-color: #00000077;
             position: fixed;
