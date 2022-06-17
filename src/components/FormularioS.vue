@@ -2,7 +2,7 @@
   <section class="corpo__mensagem" :class="{'reply' : replyAtivo || editReplyAtivo}">
     <div class="corpo__Cform">
       <img
-        src="../images/avatars/image-juliusomo.png"
+        :src="Users.image.webp"
         alt=""
         class="corpo__img"
       />
@@ -15,7 +15,7 @@
       ></textarea>
       <div class="corpo__CCform">
         <img
-        src="../images/avatars/image-juliusomo.png"
+        :src="Users.image.webp"
         alt=""
         class="corpo__imgC"
       />
@@ -26,9 +26,11 @@
 </template>
 
 <script lang="ts">
+import { IComments } from "@/interfaces/IComments";
 import { IReplies } from "@/interfaces/IReplies";
+import { IUser } from "@/interfaces/IUser";
 import { store, useStore } from "@/store";
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, PropType } from "vue";
 
 export default defineComponent({
   name: "FormularioS",
@@ -47,7 +49,6 @@ export default defineComponent({
     const store = useStore()
     return{
       User: computed(() => store.state.Users),
-      Comments :computed(() => store.state.Comments)
     }
   },
   computed:{
@@ -65,67 +66,114 @@ export default defineComponent({
       replyAtivo: Boolean,
       editAtivo: Boolean,
       editReplyAtivo: Boolean,
-      username: String,
-      idReply:{
-        type: Number,
-        default: 0
+      username: {
+        type:String,
+        default:''
+        },
+      Comment:{
+        type: Object as PropType<IComments>
       },
-      idComment:{
-        type:Number
+      Reply:{
+        type: Object as PropType<IReplies>,
       },
-      id:{
-        type:Number
-      },
-      
-      // idReply: Number,
-      // idComment: Number
+      Users:{
+        type: Object as PropType<IUser>,
+      }
+
 
   },
   methods:{
       getConteudo(){
         if(this.editAtivo){
-          const createdAt = new Date().toISOString().substr(11,8)
-          const id = this.id
-          console.log(id)
-          store.commit('EDIT_COMMENT',{
-            id: id,
-            content: this.conteudo,
-            
-          } as IReplies)
-          this.conteudo = ''
-          this.editReplyAtivo1 = this.editReplyAtivo
-          this.$emit('aoEdit',this.editReplyAtivo1)
+          this.editarComment()
           return
         }else if(this.replyAtivo){
-          store.commit('ADD_REPLY',{
-            id: this.idComment,
-            content:this.conteudo,
-            replyingTo: this.username
-          } as IReplies)
-          this.conteudo = ''
-          this.replyAtivo1 = !this.replyAtivo
-          this.$emit('aoReply',this.replyAtivo1)
+          this.adicionarReply()
           return
         }else if(this.editReplyAtivo){
-          const info = [this.idComment,this.idReply,this.conteudo]
-          console.log(this.idComment,this.idReply,this.conteudo)
-          store.commit('EDIT_REPLY',info)
-          this.conteudo = ''
-          this.editReplyAtivo1 = !this.editReplyAtivo
-          this.$emit('aoEdit',this.editReplyAtivo1)
+          this.editarReply()
           return
         }
-          const createdAt = new Date().toISOString().substr(11,8)
-          store.commit('ADD_COMMENT',this.conteudo)
-          this.conteudo = ''
-          // store.commit('EDIT_COMMENT',{
-          //   id: this.idReply,
-          //   content: this.conteudo,
-          //   createdAt: createdAt,
-          //   score: 0,
-          //   user: store.state.Users[0]
-          // } as IReplies)
-      }
+        this.adicionarComment()
+      },
+      modeloComment(id:number, conteudo:string,createdAt:string, score:number, user: IUser ,replies: IReplies[]): IComments{
+        const comment = {
+          id: id ,
+          content: conteudo,
+          createdAt:createdAt,
+          score:score,
+          user:user,
+          replies: replies
+        } as IComments
+        return comment
+      },
+      modeloReply(id:number, conteudo:string,createdAt:string, score:number, user: IUser ,replyingTo : string): IReplies{
+        const reply = {
+          id: id ,
+          content: conteudo,
+          createdAt:createdAt,
+          score:score,
+          user:user,
+          replyingTo: replyingTo
+        } as IReplies
+        return reply
+      },
+      adicionarComment(){
+        const createdAt = new Date().toISOString().substr(11,8)
+        const comment = this.modeloComment(5,this.conteudo,createdAt,1,this.Users || this.User[0],[])
+        store.dispatch('CADASTRAR_COMMENT',comment)
+        this.conteudo = ''
+      },
+      editarComment(){
+        const comment = this.modeloComment(this.Comment?.id || 0,
+        this.conteudo,
+        this.Comment?.createdAt || 'error',
+        this.Comment?.score || 1,
+        this.Comment?.user || this.Users || this.User[0],
+        this.Comment?.replies || [])
+        store.dispatch('EDITAR_COMMENT',comment)
+        this.conteudo = ''
+        this.editReplyAtivo1 = this.editReplyAtivo
+        this.$emit('aoEdit',this.editReplyAtivo1)
+      },
+      adicionarReply(){
+        const createdAt = new Date().toISOString().substr(11,8)
+        const comment = this.modeloComment(this.Comment?.id || 0,
+        this.Comment?.content || 'error',
+        this.Comment?.createdAt || 'error',
+        this.Comment?.score || 1,
+        this.Comment?.user || this.Users || this.User[0],
+        this.Comment?.replies || [])
+        const reply = this.modeloReply(5,this.conteudo,createdAt,1,this.Users || this.User[0],this.username)
+        comment.replies.push(reply)
+        this.conteudo = ''
+        store.dispatch('CADASTRAR_REPLY',comment)
+        this.replyAtivo1 = !this.replyAtivo
+        this.$emit('aoReply',this.replyAtivo1)
+      },
+      editarReply(){
+        const comment = this.modeloComment(this.Comment?.id || 0,
+        this.Comment?.content || 'error',
+        this.Comment?.createdAt || 'error',
+        this.Comment?.score || 1,
+        this.Comment?.user || this.Users || this.User[0],
+        this.Comment?.replies || [])
+        const reply = this.modeloReply(
+          this.Reply?.id || 0,
+          this.conteudo,
+          this.Reply?.createdAt || 'error',
+          this.Reply?.score || 1,
+          this.Reply?.user || this.Users || this.User[0],
+          this.Reply?.replyingTo || 'error')
+        const index = comment.replies.findIndex(resp => resp.id == this.Reply?.id)
+        comment.replies[index] = reply
+        this.conteudo = ''
+        store.dispatch('CADASTRAR_REPLY',comment)
+        this.editReplyAtivo1 = !this.editReplyAtivo
+        this.$emit('aoEdit',this.editReplyAtivo1)
+      },
+      
+
   }
 });
 </script>

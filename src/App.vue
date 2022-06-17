@@ -1,19 +1,19 @@
 <template>  
   <body>
     <main class="corpo">
-    <MensagemS />
+    <ConteinerS />
     </main>
   </body>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import MensagemS from './components/MensagemS.vue'
+import ConteinerS from './components/ConteinerS.vue'
 
 export default defineComponent({
   name: 'App',
   components: {
-    MensagemS,
+    ConteinerS,
   }
 });
 </script>

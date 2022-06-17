@@ -7,15 +7,18 @@
             </p>
             <div class="corpo__NCbotao">
                 <button class="corpo__Nbotao" @click="cancel">NO,CANCEL</button>
-                <button class="corpo__Nbotao2" @click="deleteC(id,idR)">YES,DELETE</button>
+                <button class="corpo__Nbotao2" @click="deleteALL(id,idR)">YES,DELETE</button>
             </div>
         </div>
     </div>
 </template>
 
 <script lang="ts">
+import { IComments } from '@/interfaces/IComments'
+import { IReplies } from '@/interfaces/IReplies'
+import { IUser } from '@/interfaces/IUser'
 import { store, useStore } from '@/store'
-import { defineComponent } from 'vue'
+import { computed, defineComponent, PropType } from 'vue'
 
 export default defineComponent({
     name:'NotificacaoS',
@@ -23,18 +26,43 @@ export default defineComponent({
         cancel(){
             this.$emit('aoDelete',this.deleteAtivo)
         },
-        deleteC(id : number, idR : number){
-            console.log('lol')
+        deleteALL(id : number, idR : number){
             if(idR == undefined){
-                store.commit('REMOVE_COMMENT',id)
-                this.$emit('aoDelete',this.deleteAtivo)
+                this.removerComment(id)
             }
             else{
-                const ids: number[] = [id,idR]
-                store.commit('REMOVE_REPLY',ids)
-                this.$emit('aoDelete',this.deleteAtivo)
+                this.removeReply(id,idR)
             }
     },
+        removerComment(id : number){
+            store.dispatch('REMOVER_COMMENT',id)
+            this.$emit('aoDelete',this.deleteAtivo)
+        },
+        removeReply(id : number, idR : number){
+            const comment = this.modeloComment(this.Comment?.id || 0,
+                this.Comment?.content || 'error',
+                this.Comment?.createdAt || 'error',
+                this.Comment?.score || 0,
+                this.Comment?.user || this.User[0],
+                this.Comment?.replies || [])
+            const commentF = comment.replies.filter(resp => resp.id != idR)
+            comment.replies = commentF
+            store.dispatch('CADASTRAR_REPLY',comment)
+            this.$emit('aoDelete',this.deleteAtivo)
+
+        },
+        modeloComment(id:number, conteudo:string,createdAt:string, score:number, user: IUser ,replies: IReplies[]): IComments{
+        const comment = {
+          id: id ,
+          content: conteudo,
+          createdAt:createdAt,
+          score:score,
+          user:user,
+          replies: replies
+        } as IComments
+        return comment
+        }
+    
     },
     emits:['aoDelete'],
     data(){
@@ -44,10 +72,16 @@ export default defineComponent({
     },
     props:{
         id: Number,
-        idR: Number
+        idR: Number,
+        Comment:{
+        type: Object as PropType<IComments>
+      },
     },
     setup(){
         const store = useStore()
+        return{
+            User : computed(() => store.state.Users)
+        }
     }
     
         

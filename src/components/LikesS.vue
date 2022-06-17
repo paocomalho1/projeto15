@@ -1,22 +1,24 @@
 <template>
-  <div class="corpo__Clikes">
-    <i class="corpo__icone corpo__plus" :class="{'ativoP': ativoP }" @click="add"></i>
-    <p class="corpo__numero">{{quantidadeLikes}}</p>
-    <i class="corpo__icone corpo__minus" :class="{'ativoM': ativoM }" @click="remove"></i>
+  <div class="corpo__Clikes" :class="{'celular' : this.celular}">
+    <i class="corpo__icone corpo__plus" :class="{'ativoP': ativoP }" @click="add(Comment,Reply)"></i>
+    <p class="corpo__numero" :class="{'celularNumero' : this.celular}">{{quantidadeLikes}}</p>
+    <i class="corpo__icone corpo__minus" :class="{'ativoM': ativoM }" @click="remove(Comment,Reply)"></i>
   </div>
 </template>
 
 <script lang="ts">
 import { IComments } from "@/interfaces/IComments";
-import { defineComponent, PropType } from "vue";
+import { IReplies } from "@/interfaces/IReplies";
+import { store } from "@/store";
+import { defineComponent, PropType, } from "vue";
 
 
 export default defineComponent({
   name: "LikeS",
   data(){
       return{
-          quantidadeLikes: this.Comment?.score,
-          quantidadeControle: this.Comment?.score,
+          quantidadeLikes: this.Reply?.score || this.Comment?.score,
+          quantidadeControle: this.Reply?.score || this.Comment?.score,
       }
   },
   computed:{
@@ -45,12 +47,19 @@ export default defineComponent({
     Comment:{
       type: Object as PropType<IComments>,
 
+    },
+    Reply:{
+      type: Object as PropType<IReplies>
+    },
+    celular:{
+      type: Boolean,
+      default: false
     }
   },
   methods:{
-      add(){
+      add(Comment: IComments,Reply: IReplies){
           if(this.quantidadeLikes === undefined){
-            this.quantidadeLikes = 0
+            this.quantidadeLikes = 1
           }
           else if(this.quantidadeControle != undefined){
             if(this.quantidadeControle == this.quantidadeLikes -1){
@@ -58,11 +67,19 @@ export default defineComponent({
             }
           }
           this.quantidadeLikes += 1
+          if(Reply == undefined){
+            console.log(Reply)
+            this.mudar_ScoreComment(Comment)
+          }
+          else{
+            this.mudar_ScoreReply(Comment,Reply)
+          }
+          
       },
-      remove(){
+      remove(Comment: IComments,Reply: IReplies){
         if(this.quantidadeLikes === undefined){
-          this.quantidadeLikes = 0
-          }else if(this.quantidadeLikes === 0){
+          this.quantidadeLikes = 1
+          }else if(this.quantidadeLikes === 1){
               return
           }else if(this.quantidadeControle != undefined){
             if(this.quantidadeControle == this.quantidadeLikes +1){
@@ -70,9 +87,43 @@ export default defineComponent({
             } 
           }
           this.quantidadeLikes -= 1
-      }
-      
-  }
+          if(Reply == undefined){
+            this.mudar_ScoreComment(Comment)
+          }
+          else{
+             this.mudar_ScoreReply(Comment,Reply)
+          }
+      },
+    mudar_ScoreComment(Comment: IComments){
+      store.dispatch('MUDAR_SCORE',{
+            id: Comment.id,
+            content: Comment.content,
+            createdAt: Comment.createdAt,
+            score: this.quantidadeLikes,
+            user: Comment.user,
+            replies: Comment.replies
+          })
+    },
+    mudar_ScoreReply(Comment : IComments,Reply : IReplies){
+      const index = Comment.replies.findIndex(resp => resp.id == Reply.id)
+            Comment.replies[index] = {
+            id:Reply.id,
+            content: Reply.content,
+            createdAt:Reply.createdAt,
+            score:this.quantidadeLikes || 1,
+            replyingTo:Reply.replyingTo,
+            user:Reply.user,
+          }
+          store.dispatch('MUDAR_SCORE',{
+            id: Comment.id,
+            content: Comment.content,
+            createdAt: Comment.createdAt,
+            score: Comment.score,
+            user: Comment.user,
+            replies: Comment.replies
+          })
+    }
+  },
 });
 </script>
 
@@ -83,13 +134,29 @@ export default defineComponent({
  .ativoM{
     background: url(../images/icon-minus-violet.svg) no-repeat center !important;
  }
+ .celular{
+    display: none;
+    @include celular{
+      display: flex !important;
+      height: 50px !important;
+      align-items: center !important;
+      flex-direction: row !important;
+      padding-bottom: 0rem !important;
+    }
+    }
+  .celularNumero{
+    @include celular{
+        margin-right: 1rem;
+        margin-left: 1rem;
+        }
+  }
 </style>
 
 <style lang="scss" scoped>
  .corpo{
   &__Clikes{
     @include celular{
-      display: none !important;
+      display: none ;
     }
   }
  }

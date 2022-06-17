@@ -1,45 +1,44 @@
 <template>
-<section class="corpo__Cmensagem">
-  <div class="corpo__Creply">
-  <MensagemUnit @aoEdit="edit" @aoReply="reply" v-for="Comment in Comments" :key="Comment.id" :Comment="Comment"/>
-  <FormularioS/>
-  </div>
-</section>
+<div class="corpo__Creply">
+    <router-link to="/" class="textdecorationone">
+    <div class="corpo__voltar">
+        <a class="corpo__botaoLink replylink ">MENU</a>
+    </div>
+    </router-link>
+  <CommentS v-for="Comment in Comments" :key="Comment.id" :Comment="Comment" :User="Users"/>
+  <FormularioS :Users="Users"/>
+</div>
 </template>
 
 <script lang='ts'>
 import { useStore } from "@/store";
-import { computed, defineComponent } from "vue";
-import FormularioS from './FormularioS.vue'
-import MensagemUnit from './MensagemUnit.vue'
+import { computed, defineComponent, ref } from "vue";
+import FormularioS from '../components/FormularioS.vue'
+import CommentS from '../components/CommentS.vue'
 export default defineComponent({
   name: "MensagemS",
   components: {
-    MensagemUnit,
+    CommentS,
     FormularioS
   },
-  setup(){
+  props:{
+    id:{
+        type: Number
+    }
+  },
+  setup(props){
     const store = useStore()
+    const Comments = computed(() => store.state.Comments)
+    const index = ref(props.id)
+    let Users = computed(() => store.state.Users[index.value || 0])
+
+
     store.dispatch('GET_COMMENTS')
-    store.dispatch('GET_USERS')
     return{
-      Comments :computed(() => store.state.Comments)
+      Comments,
+      Users,
+
     }
-  },
-  methods:{
-    reply(reply:boolean){
-      this.replyAtivo = reply
-    },
-    edit(edit:boolean){
-      console.log(edit)
-      this.editAtivo = edit
-    }
-  },
-  data() {
-    return {
-      replyAtivo: false,
-      editAtivo: false
-    };
 }
 });
 </script>
@@ -47,6 +46,9 @@ export default defineComponent({
 <style lang='scss'>
 
 .corpo {
+.textdecorationone{
+    text-decoration: none;
+}
   @include celular{
   }
   &__Cmensagem{

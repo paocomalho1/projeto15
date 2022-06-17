@@ -1,7 +1,7 @@
 <template>
-    <NotificacaoS v-if="this.deleteAtivo" :id="id" :idR="Reply.id" @aoDelete="deleteR" />
+    <NotificacaoS v-if="this.deleteAtivo" :id="id" :idR="Reply.id" @aoDelete="deleteReply" :Comment="Comment"/>
     <div class="corpo__mensagem reply">
-    <LikeSReply :Reply="Reply"/>
+    <LikeS :Reply="Reply" :Comment="Comment"/>
     <div class="corpo__Cconteudo">
       <div class="corpo__Chead">
         <div class="corpo__Cuser">
@@ -11,13 +11,13 @@
             class="corpo__user"
           />
           <p class="h3 corpo__name">{{Reply.user.username}}</p>
-          <p class="corpo__you" v-if="Reply.user.username == Users[0].username">you</p>
+          <p class="corpo__you" v-if="Reply.user.username == Users.username">you</p>
           <p class="corpo__mes">{{Reply.createdAt}}</p>
         </div>
         <div class="corpo__Cbotaolink">
-        <a class="corpo__botaoLink editlink" @click="editR" v-if="Reply.user.username == Users[0].username">Edit</a>
-        <a class="corpo__botaoLink deletelink" @click="deleteR" v-if="Reply.user.username == Users[0].username">Delete</a>
-        <a class="corpo__botaoLink replylink" @click="reply(Reply.user.username)" v-if="Reply.user.username != Users[0].username">Reply</a>
+        <a class="corpo__botaoLink editlink" @click="mudarEdit" v-if="Reply.user.username == Users.username">Edit</a>
+        <a class="corpo__botaoLink deletelink" @click="deleteReply" v-if="Reply.user.username == Users.username">Delete</a>
+        <a class="corpo__botaoLink replylink" @click="mudarReply" v-if="Reply.user.username != Users.username">Reply</a>
         </div>
       </div>
       <p class="corpo__conteudo">
@@ -25,84 +25,78 @@
       </p>
     </div>
     <div class="corpo__Ccelular">
-    <LikesSCelularReply :Reply="Reply"/>
+    <LikeS :Comment="Comment" :Reply="Reply" :celular="celular"/>
     <div class="corpo__CbotaolinkC">
-        <a class="corpo__botaoLink editlink" @click="editR" v-if="Reply.user.username == Users[0].username">Edit</a>
-        <a class="corpo__botaoLink deletelink" @click="deleteR" v-if="Reply.user.username == Users[0].username">Delete</a>
-        <a class="corpo__botaoLink replylink" @click="reply(Reply.user.username)" v-if="Reply.user.username != Users[0].username">Reply</a>
+        <a class="corpo__botaoLink editlink" @click="mudarEdit" v-if="Reply.user.username == Users.username">Edit</a>
+        <a class="corpo__botaoLink deletelink" @click="deleteReply" v-if="Reply.user.username == Users.username">Delete</a>
+        <a class="corpo__botaoLink replylink" @click="mudarReply" v-if="Reply.user.username != Users.username">Reply</a>
     </div>
     </div>
   </div>
-   <FormularioS @aoReply="edit"  v-if="replyAtivo" :username="Reply.user.username" :replyAtivo="this.replyAtivo" :idComment="id" :idReply="Reply.id"/>
-   <FormularioS @aoEdit="edita"  v-if="editReplyAtivo" :editReplyAtivo="this.editReplyAtivo" :replyAtivo="this.replyAtivo" :idComment="id" :idReply="Reply.id"/>
+   <FormularioS @aoReply="mudarReply"  v-if="replyAtivo" :username="Reply.user.username" :replyAtivo="this.replyAtivo" :Comment="Comment" :Reply="Reply" :Users="Users"/>
+   <FormularioS @aoEdit="mudarEdit"  v-if="editReplyAtivo" :editReplyAtivo="this.editReplyAtivo" :replyAtivo="this.replyAtivo" :Comment="Comment" :Reply="Reply" :Users="Users"/>
 </template>
 <script lang="ts">
-import { computed, defineComponent,PropType } from "vue";
-import LikeSReply from "./LikesSReply.vue";
+import { computed, defineComponent,PropType, ref } from "vue";
+import LikeS from "./LikesS.vue";
 import {useStore} from "../store";
 import NotificacaoS from './NotificacaoS.vue';
 import FormularioS from './FormularioS.vue';
-import LikesSCelularReply from './LikesSCelularReply.vue'
 
 import { IComments } from "@/interfaces/IComments";
+import { IReplies } from "@/interfaces/IReplies";
+import { IUser } from "@/interfaces/IUser";
 export default defineComponent({
   name: "MensagemUnit",
   components: {
-    LikeSReply,
+    LikeS,
     FormularioS,
     NotificacaoS,
-    LikesSCelularReply
   },
-  emits:[
-      'aoReply'
-  ],
   props:{
+    User:{
+      type: Object as PropType<IUser>,
+    },
     Reply:{
-      type: Object as PropType<IComments>,
+      type: Object as PropType<IReplies>,
     },
-    idComment:{
-      type:Number
+    Comment:{
+       type: Object as PropType<IComments>
     },
-    id:{
-        type:Number
-    }
-  },
-  methods: {
-    reply(username: string) {
-      this.replyAtivo = !this.replyAtivo;
-      this.$emit('aoReply',this.replyAtivo,username)
-    },
-    deleteR(){
-      this.deleteAtivo = !this.deleteAtivo
-    },
-    editR(){
-      this.editReplyAtivo = !this.editReplyAtivo
-
-    },
-    edit(reply : boolean){
-      this.replyAtivo = reply
-    },
-    edita(reply : boolean){
-      this.editReplyAtivo = reply
-    }
   },
 
-  setup(){
+  setup(props){
     const store = useStore()
-    store.dispatch('GET_COMMENTS')
-    store.dispatch('GET_USERS')
-    return{
-      Comments :computed(() => store.state.Comments),
-      Users: computed(() => store.state.Users)  
+    const Users = ref(props.User)
+    const replyAtivo = ref(false)
+    const editReplyAtivo = ref(false)
+    const deleteAtivo = ref(false)
+    const botao = ref("REPLY")
+    const celular = ref(true)
+
+    const mudarReply = () :void =>  {
+      replyAtivo.value = !replyAtivo.value;
     }
-  },
-  data() {
-    return {
-      replyAtivo: false,
-      botao: "REPLY",
-      editReplyAtivo: false,
-      deleteAtivo: false,
-    };
+    const deleteReply = () :void =>  {
+      deleteAtivo.value = !deleteAtivo.value;
+    }
+    const mudarEdit = () :void =>  {
+      editReplyAtivo.value = !editReplyAtivo.value;
+    }
+    
+
+    return{
+      Users,
+      replyAtivo,
+      editReplyAtivo,
+      deleteAtivo,
+      botao,
+      celular,
+      mudarReply,
+      deleteReply,
+      mudarEdit
+
+    }
   },
 });
 </script>
