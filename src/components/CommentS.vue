@@ -66,7 +66,7 @@ export default defineComponent({
   },
   setup(props){
     const store = useStore()
-    store.dispatch('GET_COMMENTS')
+    //store.dispatch('GET_COMMENTS')
     const Users = ref(props.User)
     const replyAtivo = ref(false)
     const editAtivo = ref(false)

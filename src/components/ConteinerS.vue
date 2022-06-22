@@ -26,7 +26,7 @@ export default defineComponent({
       router.push(`/users/${id}`)
     }
 
-    store.dispatch('GET_COMMENTS')
+    //store.dispatch('GET_COMMENTS')
     return{
       Comments,
       Users,

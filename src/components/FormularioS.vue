@@ -49,6 +49,7 @@ export default defineComponent({
     const store = useStore()
     return{
       User: computed(() => store.state.Users),
+      Comments: computed(() => store.state.Comments),
     }
   },
   computed:{
@@ -96,6 +97,43 @@ export default defineComponent({
         }
         this.adicionarComment()
       },
+      idGeneratorC(){
+        let id = 0
+        if(this.Comments.length == 0){
+          return id = 1
+        }
+        for(let i = 10; i >= 1; i--){
+          let numerosDiferentes = 0
+          this.Comments.forEach(comment => {
+            if(comment.id != i){
+              numerosDiferentes++
+               if(numerosDiferentes == this.Comments.length){
+                console.log(i)
+                return id = i
+              }
+              }
+          })
+        }
+        return id
+      },
+      idGeneratorR(){
+        let id = 0
+        if(this.Comment?.replies.length == 0){
+          return id = 1
+        }
+        for(let i = 10; i > 1; i--){
+          let numerosDiferentes = 0
+          this.Comment?.replies.forEach(comment => {
+            if(comment.id != i){
+              numerosDiferentes++
+               if(numerosDiferentes == this.Comment?.replies.length){
+                return id = i
+              }
+              }
+          })
+        }
+        return id
+      },
       modeloComment(id:number, conteudo:string,createdAt:string, score:number, user: IUser ,replies: IReplies[]): IComments{
         const comment = {
           id: id ,
@@ -119,9 +157,16 @@ export default defineComponent({
         return reply
       },
       adicionarComment(){
+        const id = this.idGeneratorC()
+        if(id != 0){
         const createdAt = new Date().toISOString().substr(11,8)
-        const comment = this.modeloComment(5,this.conteudo,createdAt,1,this.Users || this.User[0],[])
-        store.dispatch('CADASTRAR_COMMENT',comment)
+        const comment = this.modeloComment(id,this.conteudo,createdAt,1,this.Users || this.User[0],[])
+        //store.dispatch('CADASTRAR_COMMENT',comment)
+        store.commit('ADD_COMMENT',comment)
+        }else{
+          alert('Comment limit has been reached.')
+        }
+        
         this.conteudo = ''
       },
       editarComment(){
@@ -131,23 +176,31 @@ export default defineComponent({
         this.Comment?.score || 1,
         this.Comment?.user || this.Users || this.User[0],
         this.Comment?.replies || [])
-        store.dispatch('EDITAR_COMMENT',comment)
+        store.commit('EDIT_COMMENT',comment)
+        //store.dispatch('EDITAR_COMMENT',comment)
         this.conteudo = ''
         this.editReplyAtivo1 = this.editReplyAtivo
         this.$emit('aoEdit',this.editReplyAtivo1)
       },
       adicionarReply(){
-        const createdAt = new Date().toISOString().substr(11,8)
-        const comment = this.modeloComment(this.Comment?.id || 0,
-        this.Comment?.content || 'error',
-        this.Comment?.createdAt || 'error',
-        this.Comment?.score || 1,
-        this.Comment?.user || this.Users || this.User[0],
-        this.Comment?.replies || [])
-        const reply = this.modeloReply(5,this.conteudo,createdAt,1,this.Users || this.User[0],this.username)
-        comment.replies.push(reply)
+        const id = this.idGeneratorR()
+        if(id != 0){
+            const createdAt = new Date().toISOString().substr(11,8)
+            const comment = this.modeloComment(this.Comment?.id || 0,
+            this.Comment?.content || 'error',
+            this.Comment?.createdAt || 'error',
+            this.Comment?.score || 1,
+            this.Comment?.user || this.Users || this.User[0],
+            this.Comment?.replies || [])
+            const reply = this.modeloReply(id ,this.conteudo,createdAt,1,this.Users || this.User[0],this.username)
+            comment.replies.push(reply)
+            store.commit('EDIT_COMMENT',comment)
+            //store.dispatch('CADASTRAR_REPLY',comment)
+        }else{
+          alert('Reply limit has been reached.')
+        }
+        
         this.conteudo = ''
-        store.dispatch('CADASTRAR_REPLY',comment)
         this.replyAtivo1 = !this.replyAtivo
         this.$emit('aoReply',this.replyAtivo1)
       },
@@ -168,7 +221,8 @@ export default defineComponent({
         const index = comment.replies.findIndex(resp => resp.id == this.Reply?.id)
         comment.replies[index] = reply
         this.conteudo = ''
-        store.dispatch('CADASTRAR_REPLY',comment)
+        store.commit('EDIT_COMMENT',comment)
+        //store.dispatch('CADASTRAR_REPLY',comment)
         this.editReplyAtivo1 = !this.editReplyAtivo
         this.$emit('aoEdit',this.editReplyAtivo1)
       },

@@ -67,13 +67,13 @@ export default defineComponent({
             }
           }
           this.quantidadeLikes += 1
-          if(Reply == undefined){
-            console.log(Reply)
-            this.mudar_ScoreComment(Comment)
-          }
-          else{
-            this.mudar_ScoreReply(Comment,Reply)
-          }
+          // if(Reply == undefined){
+          //   console.log(Reply)
+          //   this.mudar_ScoreComment(Comment)
+          // }
+          // else{
+          //   this.mudar_ScoreReply(Comment,Reply)
+          // }
           
       },
       remove(Comment: IComments,Reply: IReplies){
@@ -87,12 +87,12 @@ export default defineComponent({
             } 
           }
           this.quantidadeLikes -= 1
-          if(Reply == undefined){
-            this.mudar_ScoreComment(Comment)
-          }
-          else{
-             this.mudar_ScoreReply(Comment,Reply)
-          }
+          // if(Reply == undefined){
+          //   this.mudar_ScoreComment(Comment)
+          // }
+          // else{
+          //    this.mudar_ScoreReply(Comment,Reply)
+          // }
       },
     mudar_ScoreComment(Comment: IComments){
       store.dispatch('MUDAR_SCORE',{

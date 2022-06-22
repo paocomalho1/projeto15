@@ -35,7 +35,8 @@ export default defineComponent({
             }
     },
         removerComment(id : number){
-            store.dispatch('REMOVER_COMMENT',id)
+            //store.dispatch('REMOVER_COMMENT',id)
+            store.commit('REMOVE_COMMENT',id)
             this.$emit('aoDelete',this.deleteAtivo)
         },
         removeReply(id : number, idR : number){
@@ -47,7 +48,8 @@ export default defineComponent({
                 this.Comment?.replies || [])
             const commentF = comment.replies.filter(resp => resp.id != idR)
             comment.replies = commentF
-            store.dispatch('CADASTRAR_REPLY',comment)
+            store.commit('EDIT_COMMENT',comment)
+            //store.dispatch('CADASTRAR_REPLY',commentF)
             this.$emit('aoDelete',this.deleteAtivo)
 
         },

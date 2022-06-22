@@ -33,7 +33,7 @@ export default defineComponent({
     let Users = computed(() => store.state.Users[index.value || 0])
 
 
-    store.dispatch('GET_COMMENTS')
+    //store.dispatch('GET_COMMENTS')
     return{
       Comments,
       Users,
